@@ -46,96 +46,165 @@
     .result {
       margin-top: 20px;
     }
+    .aksi-btn {
+      margin: 0 2px;
+      padding: 3px 6px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .edit { background-color: orange; color: white; }
+    .hapus { background-color: red; color: white; }
+    .tambah { background-color: green; color: white; }
+    .kurang { background-color: #555; color: white; }
   </style>
 </head>
 <body>
 
-  <h2>Manajemen Stok & Keuangan</h2>
+<h2>Manajemen Stok & Keuangan</h2>
 
-  <div id="barang-form">
-    <div class="form-group">
-      <input type="text" placeholder="Nama Barang" id="nama">
-      <input type="number" placeholder="Stok" id="stok">
-      <input type="number" placeholder="Harga (Rp)" id="harga">
-      <input type="number" placeholder="Terjual" id="terjual">
-      <select id="metode">
-        <option value="cash">Cash</option>
-        <option value="qris">QRIS</option>
-      </select>
-      <button onclick="tambahBarang()">+ Tambah</button>
-    </div>
+<div id="barang-form">
+  <div class="form-group">
+    <input type="text" placeholder="Nama Barang" id="nama">
+    <input type="number" placeholder="Stok" id="stok">
+    <input type="number" placeholder="Harga (Rp)" id="harga">
+    <input type="number" placeholder="Terjual" id="terjual">
+    <select id="metode">
+      <option value="cash">Cash</option>
+      <option value="qris">QRIS</option>
+    </select>
+    <button onclick="tambahBarang()">+ Tambah</button>
   </div>
+</div>
 
-  <table id="laporan">
-    <thead>
-      <tr>
-        <th>Nama Barang</th>
-        <th>Stok Sisa</th>
-        <th>Terjual</th>
-        <th>Harga</th>
-        <th>Metode</th>
-        <th>Pemasukan</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+<table id="laporan">
+  <thead>
+    <tr>
+      <th>Nama Barang</th>
+      <th>Stok Sisa</th>
+      <th>Terjual</th>
+      <th>Harga</th>
+      <th>Metode</th>
+      <th>Pemasukan</th>
+      <th>Aksi</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
 
-  <div class="result">
-    <p><strong>Total Pemasukan:</strong> <span id="total">Rp 0</span></p>
-    <p><strong>Uang Masuk Cash:</strong> <span id="cash">Rp 0</span></p>
-    <p><strong>Uang Masuk QRIS:</strong> <span id="qris">Rp 0</span></p>
-    <p><strong>Final Uang Dipegang (Total - QRIS):</strong> <span id="final">Rp 0</span></p>
-  </div>
+<div class="result">
+  <p><strong>Total Pemasukan:</strong> <span id="total">Rp 0</span></p>
+  <p><strong>Uang Masuk Cash:</strong> <span id="cash">Rp 0</span></p>
+  <p><strong>Uang Masuk QRIS:</strong> <span id="qris">Rp 0</span></p>
+  <p><strong>Final Uang Dipegang (Total - QRIS):</strong> <span id="final">Rp 0</span></p>
+</div>
 
-  <script>
-    let total = 0;
-    let cash = 0;
-    let qris = 0;
+<script>
+  let data = [];
+  let total = 0;
+  let cash = 0;
+  let qris = 0;
 
-    function formatRupiah(angka) {
-      return "Rp " + angka.toLocaleString("id-ID");
-    }
+  function formatRupiah(angka) {
+    return "Rp " + angka.toLocaleString("id-ID");
+  }
 
-    function tambahBarang() {
-      const nama = document.getElementById("nama").value;
-      const stok = parseInt(document.getElementById("stok").value);
-      const harga = parseInt(document.getElementById("harga").value);
-      const terjual = parseInt(document.getElementById("terjual").value);
-      const metode = document.getElementById("metode").value;
+  function renderTable() {
+    const tbody = document.querySelector("#laporan tbody");
+    tbody.innerHTML = "";
+    total = cash = qris = 0;
 
-      if (!nama || isNaN(stok) || isNaN(harga) || isNaN(terjual)) {
-        alert("Isi semua data dengan benar!");
-        return;
-      }
-
-      const sisa = stok - terjual;
-      const pemasukan = harga * terjual;
+    data.forEach((item, index) => {
+      const pemasukan = item.harga * item.terjual;
       total += pemasukan;
-      if (metode === "cash") cash += pemasukan;
-      if (metode === "qris") qris += pemasukan;
+      if (item.metode === "cash") cash += pemasukan;
+      if (item.metode === "qris") qris += pemasukan;
 
-      const row = `<tr>
-        <td>${nama}</td>
-        <td>${sisa}</td>
-        <td>${terjual}</td>
-        <td>${formatRupiah(harga)}</td>
-        <td>${metode.toUpperCase()}</td>
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${item.nama}</td>
+        <td>${item.stok - item.terjual}</td>
+        <td>${item.terjual}</td>
+        <td>${formatRupiah(item.harga)}</td>
+        <td>${item.metode.toUpperCase()}</td>
         <td>${formatRupiah(pemasukan)}</td>
-      </tr>`;
-      document.querySelector("#laporan tbody").innerHTML += row;
+        <td>
+          <button class="aksi-btn tambah" onclick="tambahStok(${index})">+ Stok</button>
+          <button class="aksi-btn kurang" onclick="kurangiStok(${index})">- Stok</button>
+          <button class="aksi-btn edit" onclick="editBarang(${index})">Edit</button>
+          <button class="aksi-btn hapus" onclick="hapusBarang(${index})">Hapus</button>
+        </td>
+      `;
+      tbody.appendChild(row);
+    });
 
-      document.getElementById("total").textContent = formatRupiah(total);
-      document.getElementById("cash").textContent = formatRupiah(cash);
-      document.getElementById("qris").textContent = formatRupiah(qris);
-      document.getElementById("final").textContent = formatRupiah(total - qris);
+    document.getElementById("total").textContent = formatRupiah(total);
+    document.getElementById("cash").textContent = formatRupiah(cash);
+    document.getElementById("qris").textContent = formatRupiah(qris);
+    document.getElementById("final").textContent = formatRupiah(total - qris);
+  }
 
-      // Reset input
-      document.getElementById("nama").value = "";
-      document.getElementById("stok").value = "";
-      document.getElementById("harga").value = "";
-      document.getElementById("terjual").value = "";
+  function tambahBarang() {
+    const nama = document.getElementById("nama").value;
+    const stok = parseInt(document.getElementById("stok").value);
+    const harga = parseInt(document.getElementById("harga").value);
+    const terjual = parseInt(document.getElementById("terjual").value);
+    const metode = document.getElementById("metode").value;
+
+    if (!nama || isNaN(stok) || isNaN(harga) || isNaN(terjual)) {
+      alert("Isi semua data dengan benar!");
+      return;
     }
-  </script>
+
+    data.push({ nama, stok, harga, terjual, metode });
+    renderTable();
+
+    document.getElementById("nama").value = "";
+    document.getElementById("stok").value = "";
+    document.getElementById("harga").value = "";
+    document.getElementById("terjual").value = "";
+  }
+
+  function tambahStok(index) {
+    const tambahan = parseInt(prompt("Tambah berapa stok?", "1"));
+    if (!isNaN(tambahan)) {
+      data[index].stok += tambahan;
+      renderTable();
+    }
+  }
+
+  function kurangiStok(index) {
+    const kurang = parseInt(prompt("Kurangi berapa stok?", "1"));
+    if (!isNaN(kurang) && data[index].stok - kurang >= data[index].terjual) {
+      data[index].stok -= kurang;
+      renderTable();
+    } else {
+      alert("Stok tidak boleh lebih kecil dari jumlah terjual.");
+    }
+  }
+
+  function editBarang(index) {
+    const barang = data[index];
+    const nama = prompt("Nama Barang", barang.nama);
+    const harga = parseInt(prompt("Harga", barang.harga));
+    const terjual = parseInt(prompt("Terjual", barang.terjual));
+    const metode = prompt("Metode (cash/qris)", barang.metode.toLowerCase());
+
+    if (nama && !isNaN(harga) && !isNaN(terjual) && ["cash", "qris"].includes(metode)) {
+      data[index] = { ...barang, nama, harga, terjual, metode };
+      renderTable();
+    } else {
+      alert("Input tidak valid.");
+    }
+  }
+
+  function hapusBarang(index) {
+    if (confirm("Hapus barang ini?")) {
+      data.splice(index, 1);
+      renderTable();
+    }
+  }
+</script>
 
 </body>
 </html>
