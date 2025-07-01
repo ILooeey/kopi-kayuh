@@ -84,6 +84,7 @@
     <p><strong>Total Pemasukan:</strong> <span id="total">Rp 0</span></p>
     <p><strong>Uang Masuk Cash:</strong> <span id="cash">Rp 0</span></p>
     <p><strong>Uang Masuk QRIS:</strong> <span id="qris">Rp 0</span></p>
+    <p><strong>Final Uang Dipegang (Total - QRIS):</strong> <span id="final">Rp 0</span></p>
   </div>
 
   <script>
@@ -126,6 +127,7 @@
       document.getElementById("total").textContent = formatRupiah(total);
       document.getElementById("cash").textContent = formatRupiah(cash);
       document.getElementById("qris").textContent = formatRupiah(qris);
+      document.getElementById("final").textContent = formatRupiah(total - qris);
 
       // Reset input
       document.getElementById("nama").value = "";
