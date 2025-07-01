@@ -69,6 +69,7 @@
     <input type="number" placeholder="Stok" id="stok">
     <input type="number" placeholder="Harga (Rp)" id="harga">
     <input type="number" placeholder="Terjual" id="terjual">
+    <input type="date" id="tanggal">
     <select id="metode">
       <option value="cash">Cash</option>
       <option value="qris">QRIS</option>
@@ -80,6 +81,7 @@
 <table id="laporan">
   <thead>
     <tr>
+      <th>Tanggal</th>
       <th>Nama Barang</th>
       <th>Stok Sisa</th>
       <th>Terjual</th>
@@ -122,6 +124,7 @@
 
       const row = document.createElement("tr");
       row.innerHTML = `
+        <td>${item.tanggal}</td>
         <td>${item.nama}</td>
         <td>${item.stok - item.terjual}</td>
         <td>${item.terjual}</td>
@@ -149,20 +152,22 @@
     const stok = parseInt(document.getElementById("stok").value);
     const harga = parseInt(document.getElementById("harga").value);
     const terjual = parseInt(document.getElementById("terjual").value);
+    const tanggal = document.getElementById("tanggal").value;
     const metode = document.getElementById("metode").value;
 
-    if (!nama || isNaN(stok) || isNaN(harga) || isNaN(terjual)) {
+    if (!nama || isNaN(stok) || isNaN(harga) || isNaN(terjual) || !tanggal) {
       alert("Isi semua data dengan benar!");
       return;
     }
 
-    data.push({ nama, stok, harga, terjual, metode });
+    data.push({ nama, stok, harga, terjual, metode, tanggal });
     renderTable();
 
     document.getElementById("nama").value = "";
     document.getElementById("stok").value = "";
     document.getElementById("harga").value = "";
     document.getElementById("terjual").value = "";
+    document.getElementById("tanggal").value = "";
   }
 
   function tambahStok(index) {
@@ -189,9 +194,10 @@
     const harga = parseInt(prompt("Harga", barang.harga));
     const terjual = parseInt(prompt("Terjual", barang.terjual));
     const metode = prompt("Metode (cash/qris)", barang.metode.toLowerCase());
+    const tanggal = prompt("Tanggal (yyyy-mm-dd)", barang.tanggal);
 
-    if (nama && !isNaN(harga) && !isNaN(terjual) && ["cash", "qris"].includes(metode)) {
-      data[index] = { ...barang, nama, harga, terjual, metode };
+    if (nama && !isNaN(harga) && !isNaN(terjual) && ["cash", "qris"].includes(metode) && tanggal) {
+      data[index] = { ...barang, nama, harga, terjual, metode, tanggal };
       renderTable();
     } else {
       alert("Input tidak valid.");
