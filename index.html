@@ -9,12 +9,8 @@
       background: #f0f2f5;
       padding: 20px;
     }
-    h2 {
-      color: #333;
-    }
-    .form-group {
-      margin-bottom: 10px;
-    }
+    h2 { color: #333; }
+    .form-group { margin-bottom: 10px; }
     input, select {
       padding: 5px;
       width: 200px;
@@ -43,9 +39,7 @@
       background: #007bff;
       color: white;
     }
-    .result {
-      margin-top: 20px;
-    }
+    .result { margin-top: 20px; }
     .aksi-btn {
       margin: 0 2px;
       padding: 3px 6px;
@@ -58,6 +52,10 @@
     .tambah { background-color: green; color: white; }
     .kurang { background-color: #555; color: white; }
   </style>
+
+  <!-- Firebase CDN -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 </head>
 <body>
 
@@ -102,10 +100,22 @@
 </div>
 
 <script>
+  // Konfigurasi Firebase kamu
+  const firebaseConfig = {
+    apiKey: "AIzaSyDUS0NB7M5xJ57gzD6WFu6zkP2gi7MlRmU",
+    authDomain: "kopi-kayuh.firebaseapp.com",
+    databaseURL: "https://kopi-kayuh-default-rtdb.firebaseio.com",
+    projectId: "kopi-kayuh",
+    storageBucket: "kopi-kayuh.appspot.com",
+    messagingSenderId: "125649079184",
+    appId: "1:125649079184:web:bd72644252bb6ae76fc115"
+  };
+
+  // Inisialisasi Firebase
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
   let data = [];
-  let total = 0;
-  let cash = 0;
-  let qris = 0;
 
   function formatRupiah(angka) {
     return "Rp " + angka.toLocaleString("id-ID");
@@ -114,7 +124,7 @@
   function renderTable() {
     const tbody = document.querySelector("#laporan tbody");
     tbody.innerHTML = "";
-    total = cash = qris = 0;
+    let total = 0, cash = 0, qris = 0;
 
     data.forEach((item, index) => {
       const pemasukan = item.harga * item.terjual;
@@ -147,6 +157,17 @@
     document.getElementById("final").textContent = formatRupiah(total - qris);
   }
 
+  function listenFirebase() {
+    db.ref("barang").on("value", (snapshot) => {
+      const val = snapshot.val();
+      data = [];
+      for (let key in val) {
+        data.push({ ...val[key], key });
+      }
+      renderTable();
+    });
+  }
+
   function tambahBarang() {
     const nama = document.getElementById("nama").value;
     const stok = parseInt(document.getElementById("stok").value);
@@ -160,8 +181,9 @@
       return;
     }
 
-    data.push({ nama, stok, harga, terjual, metode, tanggal });
-    renderTable();
+    const barang = { nama, stok, harga, terjual, metode, tanggal };
+    const newKey = db.ref().child("barang").push().key;
+    db.ref("barang/" + newKey).set(barang);
 
     document.getElementById("nama").value = "";
     document.getElementById("stok").value = "";
@@ -173,43 +195,51 @@
   function tambahStok(index) {
     const tambahan = parseInt(prompt("Tambah berapa stok?", "1"));
     if (!isNaN(tambahan)) {
-      data[index].stok += tambahan;
-      renderTable();
+      const item = data[index];
+      item.stok += tambahan;
+      db.ref("barang/" + item.key).set(item);
     }
   }
 
   function kurangiStok(index) {
     const kurang = parseInt(prompt("Kurangi berapa stok?", "1"));
-    if (!isNaN(kurang) && data[index].stok - kurang >= data[index].terjual) {
-      data[index].stok -= kurang;
-      renderTable();
+    const item = data[index];
+    if (!isNaN(kurang) && item.stok - kurang >= item.terjual) {
+      item.stok -= kurang;
+      db.ref("barang/" + item.key).set(item);
     } else {
       alert("Stok tidak boleh lebih kecil dari jumlah terjual.");
     }
   }
 
   function editBarang(index) {
-    const barang = data[index];
-    const nama = prompt("Nama Barang", barang.nama);
-    const harga = parseInt(prompt("Harga", barang.harga));
-    const terjual = parseInt(prompt("Terjual", barang.terjual));
-    const metode = prompt("Metode (cash/qris)", barang.metode.toLowerCase());
-    const tanggal = prompt("Tanggal (yyyy-mm-dd)", barang.tanggal);
+    const item = data[index];
+    const nama = prompt("Nama Barang", item.nama);
+    const harga = parseInt(prompt("Harga", item.harga));
+    const terjual = parseInt(prompt("Terjual", item.terjual));
+    const metode = prompt("Metode (cash/qris)", item.metode);
+    const tanggal = prompt("Tanggal (yyyy-mm-dd)", item.tanggal);
 
     if (nama && !isNaN(harga) && !isNaN(terjual) && ["cash", "qris"].includes(metode) && tanggal) {
-      data[index] = { ...barang, nama, harga, terjual, metode, tanggal };
-      renderTable();
+      item.nama = nama;
+      item.harga = harga;
+      item.terjual = terjual;
+      item.metode = metode;
+      item.tanggal = tanggal;
+      db.ref("barang/" + item.key).set(item);
     } else {
       alert("Input tidak valid.");
     }
   }
 
   function hapusBarang(index) {
+    const item = data[index];
     if (confirm("Hapus barang ini?")) {
-      data.splice(index, 1);
-      renderTable();
+      db.ref("barang/" + item.key).remove();
     }
   }
+
+  listenFirebase();
 </script>
 
 </body>
