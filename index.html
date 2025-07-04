@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Manajemen Stok & Keuangan</title>
   <style>
     body {
@@ -53,7 +53,7 @@
     .kurang { background-color: #555; color: white; }
   </style>
 
-  <!-- Firebase CDN -->
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 </head>
@@ -100,7 +100,7 @@
 </div>
 
 <script>
-  // Konfigurasi Firebase kamu
+  // Konfigurasi Firebase
   const firebaseConfig = {
     apiKey: "AIzaSyDUS0NB7M5xJ57gzD6WFu6zkP2gi7MlRmU",
     authDomain: "kopi-kayuh.firebaseapp.com",
@@ -164,6 +164,7 @@
       for (let key in val) {
         data.push({ ...val[key], key });
       }
+      console.log("Data terbaru:", data);
       renderTable();
     });
   }
@@ -184,6 +185,7 @@
     const barang = { nama, stok, harga, terjual, metode, tanggal };
     const newKey = db.ref().child("barang").push().key;
     db.ref("barang/" + newKey).set(barang);
+    console.log("Barang ditambahkan:", barang);
 
     document.getElementById("nama").value = "";
     document.getElementById("stok").value = "";
@@ -244,3 +246,4 @@
 
 </body>
 </html>
+
